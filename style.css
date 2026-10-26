@@ -726,15 +726,3 @@ body {
   font-weight: 700;
   color: #fda4af;
 }
-
-.payload-preview {
-  background: rgba(9, 13, 22, 0.9);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-sm);
-  padding: 0.75rem;
-  font-family: monospace;
-  font-size: 0.75rem;
-  color: #93c5fd;
-  overflow-x: auto;
-  max-height: 180px;
-}

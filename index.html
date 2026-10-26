@@ -23,25 +23,14 @@
         </div>
         <div>
           <div class="brand-title">MindPulse ML</div>
-          <div class="brand-subtitle">FastAPI Student Mental Health Telemetry &amp; Inference</div>
+          <div class="brand-subtitle">Student wellbeing insights</div>
         </div>
       </div>
 
       <div class="api-controls">
-        <div style="display: flex; align-items: center; gap: 0.4rem;">
-          <label for="apiBaseUrl" style="font-size: 0.75rem; color: #94a3b8;">Endpoint:</label>
-          <input
-            type="text"
-            id="apiBaseUrl"
-            value="http://127.0.0.1:8000"
-            class="input-control"
-            style="width: 195px; padding: 0.3rem 0.6rem; font-size: 0.78rem; font-family: monospace;"
-            aria-label="FastAPI Base URL"
-          />
-        </div>
-        <button type="button" id="statusPill" class="status-pill" title="Click to ping GET / on FastAPI">
+        <button type="button" id="statusPill" class="status-pill" title="Check service status">
           <span id="statusDot" class="status-dot"></span>
-          <span id="statusText">Checking API...</span>
+          <span id="statusText">Checking service...</span>
         </button>
       </div>
     </div>
@@ -59,9 +48,9 @@
             <line x1="16" y1="13" x2="8" y2="13"></line>
             <line x1="16" y1="17" x2="8" y2="17"></line>
           </svg>
-          StudentData Input Parameters
+          Your daily profile
         </h1>
-        <span style="font-size: 0.75rem; color: #64748b; font-family: monospace;">POST /predict</span>
+        <span style="font-size: 0.75rem; color: #64748b;">Private and secure</span>
       </div>
 
       <!-- Quick Sample Presets -->
@@ -430,21 +419,15 @@
       </form>
     </section>
 
-    <!-- Right Column: Result Card, Loading State & JSON Inspector -->
+    <!-- Right Column: Result Card & Loading State -->
     <aside class="sticky-panel">
       <!-- Graceful Error Banner -->
       <div id="errorBanner" class="error-banner" role="alert">
         <div class="error-header">
-          <span id="errorBannerTitle">API Error</span>
+          <span id="errorBannerTitle">Something went wrong</span>
           <button type="button" id="closeErrorBtn" style="background: none; border: none; color: #fda4af; cursor: pointer; font-size: 1rem;">&times;</button>
         </div>
         <p id="errorBannerMsg" style="line-height: 1.45;"></p>
-        <div id="simulateFallbackWrap" style="display: none; align-items: center; justify-content: space-between; gap: 0.5rem; padding-top: 0.35rem; border-top: 1px solid rgba(244,63,94,0.25);">
-          <span style="font-size: 0.75rem; color: #fecdd3;">Backend not running right now?</span>
-          <button type="button" id="simulateFallbackBtn" class="preset-btn" style="border-color: rgba(244,63,94,0.5); color: #fff;">
-            Preview Card with Demo Score
-          </button>
-        </div>
       </div>
 
       <!-- Prediction Output Card -->
@@ -454,7 +437,7 @@
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
             </svg>
-            Model Diagnostic Verdict
+            Your wellbeing snapshot
           </h2>
         </div>
 
@@ -469,7 +452,7 @@
           </div>
           <h3 style="font-size: 1rem; font-weight: 600; color: #e2e8f0; margin-bottom: 0.35rem;">Awaiting Student Telemetry</h3>
           <p style="font-size: 0.84rem; max-width: 280px;">
-            Fill out the daily usage metrics and click <strong>Predict Mental Health Score</strong> to query <code style="color: #a5b4fc;">POST /predict</code>.
+            Fill out your daily usage metrics and click <strong>Predict Mental Health Score</strong> to see your result.
           </p>
         </div>
 
@@ -480,7 +463,7 @@
             <div class="neural-ring-inner"></div>
             <div class="neural-core"></div>
           </div>
-          <div class="loading-title">Running Model Inference...</div>
+          <div class="loading-title">Reviewing your responses...</div>
           <p id="loadingQuipText" class="loading-quips">
             "Consulting a random forest about your 3 AM scrolling habits..."
           </p>
@@ -504,7 +487,7 @@
           <div id="sarcasticBox" class="sarcastic-box">
             <div class="sarcastic-tag">
               <span>AI Reality Check</span>
-              <span id="sourceModeTag">POST /predict</span>
+              <span id="sourceModeTag">Personalised result</span>
             </div>
             <p id="sarcasticVerdictText" class="sarcastic-text"></p>
           </div>
@@ -524,21 +507,13 @@
               <div id="metaSleepStudy" style="font-weight: 600; color: #e2e8f0;">-</div>
             </div>
             <div>
-              <div style="color: #64748b; font-size: 0.7rem;">Backend Country Group</div>
+              <div style="color: #64748b; font-size: 0.7rem;">Country / region</div>
               <div id="metaCountryGroup" style="font-weight: 600; color: #e2e8f0;">-</div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Live JSON Request Inspector -->
-      <div class="glass-card" style="padding: 1.25rem;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem;">
-          <span style="font-size: 0.78rem; font-weight: 600; color: #94a3b8;">Live Request Body (StudentData Schema)</span>
-          <span style="font-size: 0.7rem; color: #10b981; font-family: monospace;">application/json</span>
-        </div>
-        <pre id="jsonPayloadPreview" class="payload-preview"></pre>
-      </div>
     </aside>
   </main>
 

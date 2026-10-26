@@ -1,11 +1,9 @@
 /**
  * Mental Health Prediction UI - Frontend Controller
- * Connects directly to FastAPI Backend (http://127.0.0.1:8000/predict)
+ * Connects to the deployed prediction service.
  */
 
-// const DEFAULT_API_BASE = "http://127.0.0.1:8000";
-
-const DEFAULT_API_BASE = "https://mental-health-score-predictor.onrender.com"; // Production backend URL
+const API_BASE_URL = "https://mindpulse-mental-health-score-4ur4.onrender.com";
 
 // Witty, dry, non-cringe loading sentences shown during inference
 const LOADING_QUIPS = [
@@ -64,7 +62,6 @@ const PRESETS = {
 };
 
 let quipInterval = null;
-let lastValidPayload = null;
 
 document.addEventListener("DOMContentLoaded", () => {
   initSliderSync();
@@ -78,7 +75,6 @@ document.addEventListener("DOMContentLoaded", () => {
     form.addEventListener("submit", handleFormSubmit);
     form.addEventListener("input", () => {
       updateDayBudgetMeter();
-      updatePayloadPreview();
     });
   }
 
@@ -95,27 +91,12 @@ document.addEventListener("DOMContentLoaded", () => {
     statusPill.addEventListener("click", checkBackendStatus);
   }
 
-  const simulateBtn = document.getElementById("simulateFallbackBtn");
-  if (simulateBtn) {
-    simulateBtn.addEventListener("click", () => {
-      if (lastValidPayload) {
-        runSimulatedFallback(lastValidPayload);
-      }
-    });
-  }
-
   const closeErrorBtn = document.getElementById("closeErrorBtn");
   if (closeErrorBtn) {
     closeErrorBtn.addEventListener("click", hideErrorBanner);
   }
 
-  updatePayloadPreview();
 });
-
-function getApiBaseUrl() {
-  const input = document.getElementById("apiBaseUrl");
-  return (input && input.value.trim().replace(/\/+$/, "")) || DEFAULT_API_BASE;
-}
 
 /**
  * Sync range inputs with numeric inputs for smooth UX
@@ -137,7 +118,6 @@ function initSliderSync() {
       num.value = slider.value;
       clearFieldError(numId);
       updateDayBudgetMeter();
-      updatePayloadPreview();
     });
 
     num.addEventListener("input", () => {
@@ -147,7 +127,6 @@ function initSliderSync() {
       }
       clearFieldError(numId);
       updateDayBudgetMeter();
-      updatePayloadPreview();
     });
   });
 
@@ -157,7 +136,6 @@ function initSliderSync() {
     if (el) {
       el.addEventListener("input", () => {
         clearFieldError(id);
-        updatePayloadPreview();
       });
     }
   });
@@ -174,7 +152,6 @@ function initCountrySelect() {
     } else {
       customWrapper.style.display = "none";
     }
-    updatePayloadPreview();
   });
 }
 
@@ -219,7 +196,6 @@ function applyPreset(data) {
 
   clearAllFieldErrors();
   updateDayBudgetMeter();
-  updatePayloadPreview();
 }
 
 function setRadioValue(name, value) {
@@ -375,34 +351,8 @@ function buildAndValidatePayload() {
   return { isValid, payload };
 }
 
-function updatePayloadPreview() {
-  const previewEl = document.getElementById("jsonPayloadPreview");
-  if (!previewEl) return;
-  const countrySelect = document.getElementById("Country")?.value || "India";
-  const country = countrySelect === "__custom__"
-    ? (document.getElementById("Custom_Country")?.value.trim() || "Other")
-    : countrySelect;
-
-  const sample = {
-    Age: Number(document.getElementById("Age")?.value || 21),
-    Gender: getRadioValue("Gender") || "male",
-    Country: country,
-    Academic_Level: getRadioValue("Academic_Level") || "undergraduate",
-    Most_Used_Platform: document.getElementById("Most_Used_Platform")?.value || "Instagram",
-    Purpose_Of_Use: getRadioValue("Purpose_Of_Use") || "Entertainment",
-    Avg_Daily_Usage_Hours: parseFloat(document.getElementById("Avg_Daily_Usage_Hours")?.value || 0),
-    Daily_Unlocks: Number(document.getElementById("Daily_Unlocks")?.value || 0),
-    Study_Hours: parseFloat(document.getElementById("Study_Hours")?.value || 0),
-    Physical_Activity_Hours: parseFloat(document.getElementById("Physical_Activity_Hours")?.value || 0),
-    Sleep_Hours_Per_Night: parseFloat(document.getElementById("Sleep_Hours_Per_Night")?.value || 0),
-    Stress_Level: getRadioValue("Stress_Level") || "Medium"
-  };
-
-  previewEl.textContent = JSON.stringify(sample, null, 2);
-}
-
 /**
- * Checks GET / on the FastAPI server to display live connection status
+ * Checks the prediction service so the user can see whether it is available.
  */
 async function checkBackendStatus() {
   const dot = document.getElementById("statusDot");
@@ -410,12 +360,12 @@ async function checkBackendStatus() {
   if (!dot || !text) return;
 
   dot.className = "status-dot";
-  text.textContent = "Checking API...";
+  text.textContent = "Checking service...";
 
   try {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 2500);
-    const res = await fetch(`${getApiBaseUrl()}/`, {
+    const res = await fetch(`${API_BASE_URL}/`, {
       method: "GET",
       signal: controller.signal
     });
@@ -423,19 +373,19 @@ async function checkBackendStatus() {
 
     if (res.ok) {
       dot.className = "status-dot online";
-      text.textContent = "FastAPI Online (127.0.0.1:8000)";
+      text.textContent = "Service ready";
     } else {
       dot.className = "status-dot offline";
-      text.textContent = `API HTTP ${res.status}`;
+      text.textContent = "Service unavailable";
     }
   } catch (err) {
     dot.className = "status-dot offline";
-    text.textContent = "FastAPI Offline (Click to retry)";
+    text.textContent = "Service unavailable";
   }
 }
 
 /**
- * Submits StudentData payload to POST /predict via Fetch API
+ * Submits the profile to the prediction service.
  */
 async function handleFormSubmit(e) {
   e.preventDefault();
@@ -445,19 +395,17 @@ async function handleFormSubmit(e) {
   if (!isValid) {
     showErrorBanner(
       "Validation Error",
-      "Please fix the highlighted fields above before sending to FastAPI.",
-      false
+      "Please fix the highlighted fields above before trying again."
     );
     return;
   }
 
-  lastValidPayload = payload;
   startLoadingState();
 
   const minLoadingDelay = new Promise((resolve) => setTimeout(resolve, 950));
 
   try {
-    const responsePromise = fetch(`${getApiBaseUrl()}/predict`, {
+    const responsePromise = fetch(`${API_BASE_URL}/predict`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -476,26 +424,21 @@ async function handleFormSubmit(e) {
     }
 
     if (!response.ok) {
-      let detail = `Server responded with status ${response.status}`;
-      try {
-        const errJson = await response.json();
-        if (errJson.detail) detail = JSON.stringify(errJson.detail);
-      } catch (_) {}
-      throw new Error(detail);
+      throw new Error("The prediction service is temporarily unavailable.");
     }
 
     const result = await response.json();
     stopLoadingState();
 
     if (typeof result.predicted_mental_health_score !== "number") {
-      throw new Error("Invalid response schema: missing 'predicted_mental_health_score'.");
+      throw new Error("We received an unexpected result. Please try again.");
     }
 
     const dot = document.getElementById("statusDot");
     const text = document.getElementById("statusText");
     if (dot && text) {
       dot.className = "status-dot online";
-      text.textContent = "FastAPI Online (127.0.0.1:8000)";
+      text.textContent = "Service ready";
     }
 
     renderPredictionResult(result.predicted_mental_health_score, payload, false);
@@ -505,31 +448,28 @@ async function handleFormSubmit(e) {
 
     const isNetworkErr = error.name === "TypeError" || error.message.includes("Failed to fetch");
     const msg = isNetworkErr
-      ? `Could not reach ${getApiBaseUrl()}/predict. Make sure your FastAPI server is running via: python -m uvicorn main:app --reload`
+      ? "We couldn't connect right now. Please check your connection and try again."
       : error.message;
 
-    showErrorBanner("Backend Connection Error", msg, isNetworkErr);
+    showErrorBanner("Unable to complete prediction", msg);
   }
 }
 
 function handleFastApiValidationError(errData) {
   if (errData && Array.isArray(errData.detail)) {
-    const messages = [];
     errData.detail.forEach((item) => {
       const fieldName = item.loc && item.loc[item.loc.length - 1];
       const msg = item.msg || "Invalid value";
       if (fieldName) {
         showFieldError(fieldName, msg);
-        messages.push(`${fieldName}: ${msg}`);
       }
     });
     showErrorBanner(
-      "FastAPI 422 Unprocessable Entity",
-      messages.join(" | ") || "Pydantic validation failed on the server.",
-      false
+      "Please check your answers",
+      "Some responses were not accepted. Review the highlighted fields and try again."
     );
   } else {
-    showErrorBanner("FastAPI Validation Error", "Invalid student data payload.", false);
+    showErrorBanner("Please check your answers", "Review the highlighted fields and try again.");
   }
 }
 
@@ -669,8 +609,8 @@ function renderPredictionResult(score, payload, isSimulated = false) {
   roastBox.style.borderLeftColor = analysis.color;
   document.getElementById("sarcasticVerdictText").textContent = analysis.fullRoast;
   document.getElementById("sourceModeTag").textContent = isSimulated
-    ? "LOCAL DEMO FALLBACK"
-    : "POST /predict • 200 OK";
+    ? "Preview"
+    : "Personalised result";
 
   // Update Mini Metric Breakdown
   const topCountries = ["Other", "India", "USA", "Canada", "Australia", "UK", "Germany", "Mexico", "Turkey", "France"];
@@ -699,27 +639,6 @@ function animateNumber(el, target, duration) {
     }
   }
   requestAnimationFrame(tick);
-}
-
-/**
- * Allows previewing the Result Card if the user's localhost server isn't started yet
- */
-function runSimulatedFallback(payload) {
-  hideErrorBanner();
-  startLoadingState();
-  setTimeout(() => {
-    stopLoadingState();
-    const stressPenalty = { "Low": 0, "Medium": 8, "High": 18, "Very High": 28 }[payload.Stress_Level] || 10;
-    const base = 78
-      + (payload.Sleep_Hours_Per_Night - 6.5) * 3.2
-      + payload.Physical_Activity_Hours * 2.5
-      + Math.min(payload.Study_Hours, 8) * 1.1
-      - payload.Avg_Daily_Usage_Hours * 2.6
-      - (payload.Daily_Unlocks / 35) * 2.2
-      - stressPenalty;
-    const simulatedScore = Math.round(Math.max(12, Math.min(98, base)) * 100) / 100;
-    renderPredictionResult(simulatedScore, payload, true);
-  }, 950);
 }
 
 /**
@@ -755,15 +674,10 @@ function clearAllFieldErrors() {
   });
 }
 
-function showErrorBanner(title, message, showSimulateBtn = false) {
+function showErrorBanner(title, message) {
   const banner = document.getElementById("errorBanner");
   document.getElementById("errorBannerTitle").textContent = title;
   document.getElementById("errorBannerMsg").textContent = message;
-
-  const simWrap = document.getElementById("simulateFallbackWrap");
-  if (simWrap) {
-    simWrap.style.display = showSimulateBtn ? "flex" : "none";
-  }
   banner.classList.add("active");
 }
 
