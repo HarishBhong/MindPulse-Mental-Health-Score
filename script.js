@@ -3,7 +3,9 @@
  * Connects directly to FastAPI Backend (http://127.0.0.1:8000/predict)
  */
 
-const DEFAULT_API_BASE = "http://127.0.0.1:8000";
+// const DEFAULT_API_BASE = "http://127.0.0.1:8000";
+
+const DEFAULT_API_BASE = "https://mental-health-score-predictor.onrender.com"; // Production backend URL
 
 // Witty, dry, non-cringe loading sentences shown during inference
 const LOADING_QUIPS = [
