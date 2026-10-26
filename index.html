@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MindPulse ML — Student Mental Health Predictor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- Sticky Top Header -->
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="brand">
+        <div class="brand-icon" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2a8 8 0 0 0-8 8c0 3.5 2.5 6.5 6 7.5V22h4v-4.5c3.5-1 6-4 6-7.5a8 8 0 0 0-8-8z"></path>
+            <path d="M9 12h6"></path>
+            <path d="M12 9v6"></path>
+          </svg>
+        </div>
+        <div>
+          <div class="brand-title">MindPulse ML</div>
+          <div class="brand-subtitle">FastAPI Student Mental Health Telemetry &amp; Inference</div>
+        </div>
+      </div>
+
+      <div class="api-controls">
+        <div style="display: flex; align-items: center; gap: 0.4rem;">
+          <label for="apiBaseUrl" style="font-size: 0.75rem; color: #94a3b8;">Endpoint:</label>
+          <input
+            type="text"
+            id="apiBaseUrl"
+            value="http://127.0.0.1:8000"
+            class="input-control"
+            style="width: 195px; padding: 0.3rem 0.6rem; font-size: 0.78rem; font-family: monospace;"
+            aria-label="FastAPI Base URL"
+          />
+        </div>
+        <button type="button" id="statusPill" class="status-pill" title="Click to ping GET / on FastAPI">
+          <span id="statusDot" class="status-dot"></span>
+          <span id="statusText">Checking API...</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Responsive Split Grid -->
+  <main class="main-container">
+    <!-- Left Column: StudentData Form -->
+    <section class="glass-card" aria-labelledby="formHeading">
+      <div class="section-header">
+        <h1 id="formHeading" class="section-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+          </svg>
+          StudentData Input Parameters
+        </h1>
+        <span style="font-size: 0.75rem; color: #64748b; font-family: monospace;">POST /predict</span>
+      </div>
+
+      <!-- Quick Sample Presets -->
+      <div class="preset-bar">
+        <span style="font-size: 0.75rem; color: #94a3b8; align-self: center; margin-right: 0.25rem;">Quick Profiles:</span>
+        <button type="button" class="preset-btn" data-preset="balanced">🌿 Balanced Scholar</button>
+        <button type="button" class="preset-btn" data-preset="crammer">☕ Finals Crammer</button>
+        <button type="button" class="preset-btn" data-preset="doomscroller">📱 3 AM Doomscroller</button>
+      </div>
+
+      <form id="predictionForm" novalidate>
+        <!-- Group 1: Demographics & Academics -->
+        <div class="form-section-label">1. Demographics &amp; Academic Profile</div>
+        <div class="form-grid">
+          <!-- Age -->
+          <div class="field-group">
+            <label for="Age" class="field-label">
+              <span>Age</span>
+              <span class="field-hint">int [10–100]</span>
+            </label>
+            <input
+              type="number"
+              id="Age"
+              name="Age"
+              class="input-control"
+              min="10"
+              max="100"
+              step="1"
+              value="21"
+              required
+            />
+            <div id="err-Age" class="field-error-msg"></div>
+          </div>
+
+          <!-- Gender -->
+          <div class="field-group">
+            <label class="field-label">
+              <span>Gender</span>
+              <span class="field-hint">Literal</span>
+            </label>
+            <div class="segmented-group">
+              <label class="segment-option">
+                <input type="radio" name="Gender" value="male" checked />
+                <span class="segment-label">Male</span>
+              </label>
+              <label class="segment-option">
+                <input type="radio" name="Gender" value="female" />
+                <span class="segment-label">Female</span>
+              </label>
+            </div>
+            <div id="err-Gender" class="field-error-msg"></div>
+          </div>
+
+          <!-- Country -->
+          <div class="field-group">
+            <label for="Country" class="field-label">
+              <span>Country</span>
+              <span class="field-hint">str (auto-grouped)</span>
+            </label>
+            <select id="Country" name="Country" class="select-control">
+              <option value="India" selected>India</option>
+              <option value="USA">USA</option>
+              <option value="Canada">Canada</option>
+              <option value="Australia">Australia</option>
+              <option value="UK">UK</option>
+              <option value="Germany">Germany</option>
+              <option value="Mexico">Mexico</option>
+              <option value="Turkey">Turkey</option>
+              <option value="France">France</option>
+              <option value="Other">Other</option>
+              <option value="__custom__">Custom Country...</option>
+            </select>
+            <div id="customCountryWrapper" style="display: none; margin-top: 0.45rem;">
+              <input
+                type="text"
+                id="Custom_Country"
+                class="input-control"
+                placeholder="Enter any country (e.g., Japan, Brazil)"
+              />
+            </div>
+            <div id="err-Country" class="field-error-msg"></div>
+          </div>
+
+          <!-- Academic Level -->
+          <div class="field-group">
+            <label class="field-label">
+              <span>Academic Level</span>
+              <span class="field-hint">Literal</span>
+            </label>
+            <div class="segmented-group">
+              <label class="segment-option">
+                <input type="radio" name="Academic_Level" value="high school" />
+                <span class="segment-label">High School</span>
+              </label>
+              <label class="segment-option">
+                <input type="radio" name="Academic_Level" value="undergraduate" checked />
+                <span class="segment-label">Undergrad</span>
+              </label>
+              <label class="segment-option">
+                <input type="radio" name="Academic_Level" value="graduate" />
+                <span class="segment-label">Graduate</span>
+              </label>
+            </div>
+            <div id="err-Academic_Level" class="field-error-msg"></div>
+          </div>
+        </div>
+
+        <!-- Group 2: Digital Ecosystem & Screen Habits -->
+        <div class="form-section-label">2. Digital Behavior &amp; Platform Usage</div>
+        <div class="form-grid">
+          <!-- Most Used Platform -->
+          <div class="field-group">
+            <label for="Most_Used_Platform" class="field-label">
+              <span>Most Used Platform</span>
+              <span class="field-hint">12 Platforms</span>
+            </label>
+            <select id="Most_Used_Platform" name="Most_Used_Platform" class="select-control">
+              <option value="Instagram" selected>Instagram</option>
+              <option value="YouTube">YouTube</option>
+              <option value="TikTok">TikTok</option>
+              <option value="WhatsApp">WhatsApp</option>
+              <option value="LinkedIn">LinkedIn</option>
+              <option value="Twitter">Twitter</option>
+              <option value="Snapchat">Snapchat</option>
+              <option value="Facebook">Facebook</option>
+              <option value="WeChat">WeChat</option>
+              <option value="LINE">LINE</option>
+              <option value="KakaoTalk">KakaoTalk</option>
+              <option value="VKontakte">VKontakte</option>
+            </select>
+            <div id="err-Most_Used_Platform" class="field-error-msg"></div>
+          </div>
+
+          <!-- Daily Unlocks -->
+          <div class="field-group">
+            <label for="Daily_Unlocks" class="field-label">
+              <span>Daily Phone Unlocks</span>
+              <span class="field-hint">int [&ge; 0]</span>
+            </label>
+            <input
+              type="number"
+              id="Daily_Unlocks"
+              name="Daily_Unlocks"
+              class="input-control"
+              min="0"
+              step="1"
+              value="55"
+              required
+            />
+            <div id="err-Daily_Unlocks" class="field-error-msg"></div>
+          </div>
+
+          <!-- Purpose Of Use -->
+          <div class="field-group full-width">
+            <label class="field-label">
+              <span>Primary Purpose of Use</span>
+              <span class="field-hint">Literal</span>
+            </label>
+            <div class="segmented-group">
+              <label class="segment-option">
+                <input type="radio" name="Purpose_Of_Use" value="Networking" />
+                <span class="segment-label">Networking</span>
+              </label>
+              <label class="segment-option">
+                <input type="radio" name="Purpose_Of_Use" value="Education" />
+                <span class="segment-label">Education</span>
+              </label>
+              <label class="segment-option">
+                <input type="radio" name="Purpose_Of_Use" value="Entertainment" checked />
+                <span class="segment-label">Entertainment</span>
+              </label>
+              <label class="segment-option">
+                <input type="radio" name="Purpose_Of_Use" value="News" />
+                <span class="segment-label">News</span>
+              </label>
+            </div>
+            <div id="err-Purpose_Of_Use" class="field-error-msg"></div>
+          </div>
+
+          <!-- Avg Daily Usage Hours -->
+          <div class="field-group full-width">
+            <label for="Avg_Daily_Usage_Hours" class="field-label">
+              <span>Average Daily Social Media Usage (Hours)</span>
+              <span class="field-hint">float [0–24]</span>
+            </label>
+            <div class="slider-combo">
+              <input
+                type="range"
+                id="Avg_Daily_Usage_Hours_Slider"
+                class="range-slider"
+                min="0"
+                max="24"
+                step="0.5"
+                value="4.5"
+              />
+              <input
+                type="number"
+                id="Avg_Daily_Usage_Hours"
+                name="Avg_Daily_Usage_Hours"
+                class="input-control number-mini"
+                min="0"
+                max="24"
+                step="0.1"
+                value="4.5"
+                required
+              />
+            </div>
+            <div id="err-Avg_Daily_Usage_Hours" class="field-error-msg"></div>
+          </div>
+        </div>
+
+        <!-- Group 3: Daily Routine, Sleep & Stress -->
+        <div class="form-section-label">3. Daily Routine, Rest &amp; Stress Load</div>
+        <div class="form-grid">
+          <!-- Study Hours -->
+          <div class="field-group">
+            <label for="Study_Hours" class="field-label">
+              <span>Daily Study Hours</span>
+              <span class="field-hint">float [0–24]</span>
+            </label>
+            <div class="slider-combo">
+              <input
+                type="range"
+                id="Study_Hours_Slider"
+                class="range-slider"
+                min="0"
+                max="24"
+                step="0.5"
+                value="5.0"
+              />
+              <input
+                type="number"
+                id="Study_Hours"
+                name="Study_Hours"
+                class="input-control number-mini"
+                min="0"
+                max="24"
+                step="0.1"
+                value="5.0"
+                required
+              />
+            </div>
+            <div id="err-Study_Hours" class="field-error-msg"></div>
+          </div>
+
+          <!-- Physical Activity Hours -->
+          <div class="field-group">
+            <label for="Physical_Activity_Hours" class="field-label">
+              <span>Physical Activity Hours</span>
+              <span class="field-hint">float [0–24]</span>
+            </label>
+            <div class="slider-combo">
+              <input
+                type="range"
+                id="Physical_Activity_Hours_Slider"
+                class="range-slider"
+                min="0"
+                max="24"
+                step="0.5"
+                value="1.0"
+              />
+              <input
+                type="number"
+                id="Physical_Activity_Hours"
+                name="Physical_Activity_Hours"
+                class="input-control number-mini"
+                min="0"
+                max="24"
+                step="0.1"
+                value="1.0"
+                required
+              />
+            </div>
+            <div id="err-Physical_Activity_Hours" class="field-error-msg"></div>
+          </div>
+
+          <!-- Sleep Hours Per Night -->
+          <div class="field-group full-width">
+            <label for="Sleep_Hours_Per_Night" class="field-label">
+              <span>Sleep Hours Per Night</span>
+              <span class="field-hint">float [0–24]</span>
+            </label>
+            <div class="slider-combo">
+              <input
+                type="range"
+                id="Sleep_Hours_Per_Night_Slider"
+                class="range-slider"
+                min="0"
+                max="24"
+                step="0.5"
+                value="7.0"
+              />
+              <input
+                type="number"
+                id="Sleep_Hours_Per_Night"
+                name="Sleep_Hours_Per_Night"
+                class="input-control number-mini"
+                min="0"
+                max="24"
+                step="0.1"
+                value="7.0"
+                required
+              />
+            </div>
+            <div id="err-Sleep_Hours_Per_Night" class="field-error-msg"></div>
+          </div>
+
+          <!-- Stress Level -->
+          <div class="field-group full-width">
+            <label class="field-label">
+              <span>Self-Reported Stress Level</span>
+              <span class="field-hint">Literal</span>
+            </label>
+            <div class="segmented-group">
+              <label class="segment-option stress-low">
+                <input type="radio" name="Stress_Level" value="Low" />
+                <span class="segment-label">Low</span>
+              </label>
+              <label class="segment-option stress-med">
+                <input type="radio" name="Stress_Level" value="Medium" checked />
+                <span class="segment-label">Medium</span>
+              </label>
+              <label class="segment-option stress-high">
+                <input type="radio" name="Stress_Level" value="High" />
+                <span class="segment-label">High</span>
+              </label>
+              <label class="segment-option stress-vhigh">
+                <input type="radio" name="Stress_Level" value="Very High" />
+                <span class="segment-label">Very High</span>
+              </label>
+            </div>
+            <div id="err-Stress_Level" class="field-error-msg"></div>
+          </div>
+        </div>
+
+        <!-- 24-Hour Day Allocation Bar -->
+        <div class="day-budget-bar">
+          <div class="day-budget-header">
+            <span id="dayBudgetNote">6.5h unallocated free time</span>
+            <strong id="dayTotalHours">17.5h / 24h logged</strong>
+          </div>
+          <div class="day-progress-track">
+            <div id="segUsage" class="day-segment" style="background: #f43f5e; width: 18%;" title="Social Media Usage"></div>
+            <div id="segStudy" class="day-segment" style="background: #6366f1; width: 21%;" title="Study Hours"></div>
+            <div id="segActivity" class="day-segment" style="background: #10b981; width: 4%;" title="Physical Activity"></div>
+            <div id="segSleep" class="day-segment" style="background: #38bdf8; width: 29%;" title="Sleep Hours"></div>
+          </div>
+          <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 0.45rem; font-size: 0.7rem; color: #94a3b8;">
+            <span><strong style="color: #f43f5e;">●</strong> Screen</span>
+            <span><strong style="color: #6366f1;">●</strong> Study</span>
+            <span><strong style="color: #10b981;">●</strong> Activity</span>
+            <span><strong style="color: #38bdf8;">●</strong> Sleep</span>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="submit-row">
+          <button type="submit" id="submitBtn" class="btn-primary">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+            </svg>
+            Predict Mental Health Score
+          </button>
+          <button type="button" id="resetBtn" class="btn-secondary">Reset</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- Right Column: Result Card, Loading State & JSON Inspector -->
+    <aside class="sticky-panel">
+      <!-- Graceful Error Banner -->
+      <div id="errorBanner" class="error-banner" role="alert">
+        <div class="error-header">
+          <span id="errorBannerTitle">API Error</span>
+          <button type="button" id="closeErrorBtn" style="background: none; border: none; color: #fda4af; cursor: pointer; font-size: 1rem;">&times;</button>
+        </div>
+        <p id="errorBannerMsg" style="line-height: 1.45;"></p>
+        <div id="simulateFallbackWrap" style="display: none; align-items: center; justify-content: space-between; gap: 0.5rem; padding-top: 0.35rem; border-top: 1px solid rgba(244,63,94,0.25);">
+          <span style="font-size: 0.75rem; color: #fecdd3;">Backend not running right now?</span>
+          <button type="button" id="simulateFallbackBtn" class="preset-btn" style="border-color: rgba(244,63,94,0.5); color: #fff;">
+            Preview Card with Demo Score
+          </button>
+        </div>
+      </div>
+
+      <!-- Prediction Output Card -->
+      <div class="glass-card">
+        <div class="section-header">
+          <h2 class="section-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+            </svg>
+            Model Diagnostic Verdict
+          </h2>
+        </div>
+
+        <!-- Initial Idle Placeholder -->
+        <div id="resultPlaceholder" class="result-placeholder">
+          <div style="width: 64px; height: 64px; border-radius: 50%; background: rgba(99, 102, 241, 0.12); display: flex; align-items: center; justify-content: center; margin-bottom: 1rem;">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M12 16v-4"></path>
+              <path d="M12 8h.01"></path>
+            </svg>
+          </div>
+          <h3 style="font-size: 1rem; font-weight: 600; color: #e2e8f0; margin-bottom: 0.35rem;">Awaiting Student Telemetry</h3>
+          <p style="font-size: 0.84rem; max-width: 280px;">
+            Fill out the daily usage metrics and click <strong>Predict Mental Health Score</strong> to query <code style="color: #a5b4fc;">POST /predict</code>.
+          </p>
+        </div>
+
+        <!-- Animated Loading State with Sarcastic Quip -->
+        <div id="loadingState" class="loading-container" aria-live="polite">
+          <div class="neural-spinner">
+            <div class="neural-ring"></div>
+            <div class="neural-ring-inner"></div>
+            <div class="neural-core"></div>
+          </div>
+          <div class="loading-title">Running Model Inference...</div>
+          <p id="loadingQuipText" class="loading-quips">
+            "Consulting a random forest about your 3 AM scrolling habits..."
+          </p>
+        </div>
+
+        <!-- Populated Creative Result Card -->
+        <div id="resultContent" class="result-content" aria-live="polite">
+          <div class="gauge-wrapper">
+            <svg class="gauge-svg" viewBox="0 0 200 200">
+              <circle class="gauge-track" cx="100" cy="100" r="80"></circle>
+              <circle id="gaugeFillCircle" class="gauge-fill" cx="100" cy="100" r="80"></circle>
+            </svg>
+            <div class="gauge-center">
+              <div id="scoreDisplayValue" class="score-value">0.00</div>
+              <div class="score-label">Mental Health Score</div>
+            </div>
+          </div>
+
+          <div id="resultTierBadge" class="tier-badge">Moderate Stability</div>
+
+          <div id="sarcasticBox" class="sarcastic-box">
+            <div class="sarcastic-tag">
+              <span>AI Reality Check</span>
+              <span id="sourceModeTag">POST /predict</span>
+            </div>
+            <p id="sarcasticVerdictText" class="sarcastic-text"></p>
+          </div>
+
+          <!-- Telemetry Snapshot -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem; font-size: 0.78rem; background: rgba(15, 23, 42, 0.6); padding: 0.85rem; border-radius: 10px; border: 1px solid rgba(255,255,255,0.06);">
+            <div>
+              <div style="color: #64748b; font-size: 0.7rem;">Top App &amp; Screen Time</div>
+              <div id="metaPlatform" style="font-weight: 600; color: #e2e8f0;">-</div>
+            </div>
+            <div>
+              <div style="color: #64748b; font-size: 0.7rem;">Unlock Frequency</div>
+              <div id="metaUnlocks" style="font-weight: 600; color: #e2e8f0;">-</div>
+            </div>
+            <div>
+              <div style="color: #64748b; font-size: 0.7rem;">Rest vs. Study</div>
+              <div id="metaSleepStudy" style="font-weight: 600; color: #e2e8f0;">-</div>
+            </div>
+            <div>
+              <div style="color: #64748b; font-size: 0.7rem;">Backend Country Group</div>
+              <div id="metaCountryGroup" style="font-weight: 600; color: #e2e8f0;">-</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live JSON Request Inspector -->
+      <div class="glass-card" style="padding: 1.25rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem;">
+          <span style="font-size: 0.78rem; font-weight: 600; color: #94a3b8;">Live Request Body (StudentData Schema)</span>
+          <span style="font-size: 0.7rem; color: #10b981; font-family: monospace;">application/json</span>
+        </div>
+        <pre id="jsonPayloadPreview" class="payload-preview"></pre>
+      </div>
+    </aside>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
